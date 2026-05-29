@@ -1,0 +1,10 @@
+langchain-google-genai
+google-generativeai
+langchain
+langchain-core
+youtube-transcript-api 
+langchain-community
+langchain-openai
+faiss-cpu 
+tiktoken 
+python-dotenv
