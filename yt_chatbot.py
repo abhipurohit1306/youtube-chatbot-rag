@@ -1,17 +1,18 @@
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
+from langchain.retrievers.multi_query import MultiQueryRetriever
 from dotenv import load_dotenv
 load_dotenv()
 
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 
 
-video_id = "Gfr50f6ZBvo" 
+video_id = "oAkLSJNr5zY" 
 try:
     ytt_api = YouTubeTranscriptApi()
     transcript_list = ytt_api.fetch(video_id, languages=['en'])
@@ -39,7 +40,10 @@ vector_store = FAISS.from_documents(chunks, embeddings)
 
 
 
-retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
+retriever = MultiQueryRetriever.from_llm(
+    retriever=vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4}),
+    llm=GoogleGenerativeAI(model="models/gemini-2.5-flash-lite")
+)
 
 result = retriever.invoke("What is deepmind? ")
 
@@ -53,9 +57,18 @@ llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash-lite", temperature=0
 
 prompt = PromptTemplate(
     template="""
-      You are a helpful assistant.
-      Answer ONLY from the provided transcript context.
-      If the context is insufficient, just say you don't know.
+      You are an expert YouTube video assistant.
+
+        Use the provided transcript context to answer the user's question.
+
+        Instructions:
+        - Base your answer primarily on the transcript context.
+        - If the user asks for a summary, provide a concise but complete summary of the video.
+        - If the user asks about a specific topic, extract and explain the relevant information from the transcript.
+        - Combine information from multiple transcript sections when needed.
+        - If the answer is partially available, provide the available information and mention what is missing.
+        - Only say "I don't know" when the transcript contains no relevant information at all.
+        - Keep the answer clear, structured, and easy to understand.
 
       {context}
       Question: {question}
@@ -80,7 +93,7 @@ parallel_chain = RunnableParallel({
 
 main_chain = parallel_chain | prompt | llm | parser
 
-print(main_chain.invoke('What are the topics discussed in  the video?'))
+print(main_chain.invoke('give me the summary of the video?'))
 
 
 
