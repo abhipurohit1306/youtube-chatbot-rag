@@ -6,6 +6,10 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import MessagesPlaceholder
+from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -19,7 +23,6 @@ try:
 
     transcript = " ".join(chunk.text for chunk in transcript_list)
     
-    # print(transcript)
 
 except TranscriptsDisabled:
     print("Transcripts are disabled for this video.")
@@ -35,65 +38,89 @@ embeddings = HuggingFaceEmbeddings(
 )
 vector_store = FAISS.from_documents(chunks, embeddings)
 
-
-# print(vector_store.index_to_docstore_id)
-
-
-
 retriever = MultiQueryRetriever.from_llm(
-    retriever=vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4}),
+    retriever=vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 8}),
+    
     llm=GoogleGenerativeAI(model="models/gemini-2.5-flash-lite")
 )
 
-result = retriever.invoke("What is deepmind? ")
-
-# for i, doc in enumerate(result):
-#     print(f"\n--- Result {i+1} ---")
-#     print(doc.page_content)
-
-
-
 llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash-lite", temperature=0.2)
 
-prompt = PromptTemplate(
-    template="""
-      You are an expert YouTube video assistant.
+
+prompt = ChatPromptTemplate.from_messages([
+    (
+        "system",
+        """
+        You are an expert YouTube video assistant.
 
         Use the provided transcript context to answer the user's question.
 
         Instructions:
         - Base your answer primarily on the transcript context.
-        - If the user asks for a summary, provide a concise but complete summary of the video.
-        - If the user asks about a specific topic, extract and explain the relevant information from the transcript.
+        - If the user asks for a summary, provide a concise but complete summary.
+        - If the user asks about a topic, explain it clearly.
         - Combine information from multiple transcript sections when needed.
-        - If the answer is partially available, provide the available information and mention what is missing.
-        - Only say "I don't know" when the transcript contains no relevant information at all.
-        - Keep the answer clear, structured, and easy to understand.
+        - Only say "I don't know" if the transcript contains no relevant information.
+        """
+    ),
 
-      {context}
-      Question: {question}
-    """,
-    input_variables = ['context', 'question']
-)
+    MessagesPlaceholder(variable_name="chat_history"),
 
-question          = "is the topic of cricket discussed in this video? if yes then what was discussed"
-retrieved_docs    = retriever.invoke(question)
+    (
+        "human",
+        """
+        Context:
+        {context}
+
+        Question:
+        {question}
+        """
+    )
+])
+
 
 def format_doc(retrieved_docs):
     context_text = "\n\n".join(doc.page_content for doc in retrieved_docs)
     return context_text
 
 
+chat_history = []
+
+
 parser = StrOutputParser()
 
 parallel_chain = RunnableParallel({
-    'context': retriever | RunnableLambda(format_doc),
-    'question': RunnablePassthrough()
+    "context": retriever | RunnableLambda(format_doc),
+    "question": RunnablePassthrough(),
+    "chat_history": RunnableLambda(
+        lambda _: chat_history
+    )
 })
 
 main_chain = parallel_chain | prompt | llm | parser
 
-print(main_chain.invoke('give me the summary of the video?'))
+while True:
+
+    question = input("\nYou: ")
+
+    if question.lower() == "exit":
+        break
+
+    answer = main_chain.invoke(question)
+
+    print("\nAI:")
+    print(answer)
+
+    chat_history.append(
+        HumanMessage(content=question)
+    )
+
+    chat_history.append(
+        AIMessage(content=answer)
+    )
+
+
+
 
 
 
