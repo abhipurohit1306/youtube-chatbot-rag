@@ -39,8 +39,7 @@ embeddings = HuggingFaceEmbeddings(
 vector_store = FAISS.from_documents(chunks, embeddings)
 
 retriever = MultiQueryRetriever.from_llm(
-    retriever=vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 8}),
-    
+    retriever = vector_store.as_retriever(search_type="similarity",search_kwargs={"k": 4}),
     llm=GoogleGenerativeAI(model="models/gemini-2.5-flash-lite")
 )
 
