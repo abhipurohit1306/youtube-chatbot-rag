@@ -121,14 +121,3 @@ while True:
 
 
 
-
-
-
-# final_prompt = prompt.invoke({"context": context_text, "question": question})
-
-# answer = llm.invoke(final_prompt)
-# print(answer.content)
-
-
-
-
