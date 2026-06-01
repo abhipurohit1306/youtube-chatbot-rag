@@ -1,6 +1,5 @@
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -10,26 +9,28 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import HumanMessage
 from langchain_core.messages import AIMessage
+from app.ingestion import get_video_chunks
 from dotenv import load_dotenv
 load_dotenv()
 
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
 
 
 video_id = "oAkLSJNr5zY" 
-try:
-    ytt_api = YouTubeTranscriptApi()
-    transcript_list = ytt_api.fetch(video_id, languages=['en'])
+# try:
+#     ytt_api = YouTubeTranscriptApi()
+#     transcript_list = ytt_api.fetch(video_id, languages=['en'])
 
-    transcript = " ".join(chunk.text for chunk in transcript_list)
+#     transcript = " ".join(chunk.text for chunk in transcript_list)
     
 
-except TranscriptsDisabled:
-    print("Transcripts are disabled for this video.")
+# except TranscriptsDisabled:
+#     print("Transcripts are disabled for this video.")
 
 
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-chunks = splitter.create_documents([transcript])
+# splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+# chunks = splitter.create_documents([transcript])
+
+chunks = get_video_chunks(video_id)
 
 
 
