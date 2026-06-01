@@ -2,13 +2,12 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough, Runn
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import HumanMessage
 from langchain_core.messages import AIMessage
 from app.ingestion import get_video_chunks
 from app.vectorstore import create_vectorstore
 from app.retriever import create_retriever
+from app.prompts import get_youtube_prompt
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -23,39 +22,11 @@ vector_store = create_vectorstore(chunks)
 
 retriever = create_retriever(vector_store)
 
+prompt = get_youtube_prompt()
+
 llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash-lite", temperature=0.2)
 
 
-prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        """
-        You are an expert YouTube video assistant.
-
-        Use the provided transcript context to answer the user's question.
-
-        Instructions:
-        - Base your answer primarily on the transcript context.
-        - If the user asks for a summary, provide a concise but complete summary.
-        - If the user asks about a topic, explain it clearly.
-        - Combine information from multiple transcript sections when needed.
-        - Only say "I don't know" if the transcript contains no relevant information.
-        """
-    ),
-
-    MessagesPlaceholder(variable_name="chat_history"),
-
-    (
-        "human",
-        """
-        Context:
-        {context}
-
-        Question:
-        {question}
-        """
-    )
-])
 
 
 def format_doc(retrieved_docs):
