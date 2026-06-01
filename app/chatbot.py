@@ -27,48 +27,33 @@ class YouTubeChatbot:
         self.main_chain = (self.parallel_chain | self.prompt | self.llm | self.parser)
 
 
-
     def format_doc(self,  retrieved_docs):
         return "\n\n".join(
             doc.page_content
             for doc in retrieved_docs
         )
     
-
-    
     def ask(self, question):
-
         answer = self.main_chain.invoke(
             question
         )
-
         self.chat_history.append(
             HumanMessage(content=question)
         )
-
         self.chat_history.append(
             AIMessage(content=answer)
         )
-
         return answer
-    
 
 
     def chat(self):
-
         while True:
-
-            question = input(
-                "\nYou: "
-            )
-
+            question = input("\nYou: ")
             if question.lower() == "exit":
                 break
-
             answer = self.ask(
                 question
             )
-
             print("\nAI:")
             print(answer)
 
