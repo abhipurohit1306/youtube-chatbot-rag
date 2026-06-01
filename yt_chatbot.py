@@ -2,13 +2,13 @@ from langchain_core.runnables import RunnableParallel, RunnablePassthrough, Runn
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
-from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import HumanMessage
 from langchain_core.messages import AIMessage
 from app.ingestion import get_video_chunks
 from app.vectorstore import create_vectorstore
+from app.retriever import create_retriever
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -21,10 +21,7 @@ chunks = get_video_chunks(video_id)
 
 vector_store = create_vectorstore(chunks)
 
-retriever = MultiQueryRetriever.from_llm(
-    retriever = vector_store.as_retriever(search_type="similarity",search_kwargs={"k": 4}),
-    llm=GoogleGenerativeAI(model="models/gemini-2.5-flash-lite")
-)
+retriever = create_retriever(vector_store)
 
 llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash-lite", temperature=0.2)
 
