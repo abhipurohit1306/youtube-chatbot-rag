@@ -67,3 +67,15 @@ if question:
             }
         )
 
+st.sidebar.title("YouTube Chatbot")
+
+st.sidebar.markdown("---")
+
+if st.sidebar.button("🎥 New Video"):
+    st.session_state.bot = None
+    st.session_state.messages = []
+    st.rerun()
+
+if st.sidebar.button("🗑️ Clear Chat"):
+    st.session_state.messages = []
+    st.rerun()
