@@ -4,6 +4,7 @@ from app.vectorstore import create_vectorstore
 from app.retriever import create_retriever
 from app.chatbot import YouTubeChatbot
 from dotenv import load_dotenv
+from app.utils import extract_video_id
 load_dotenv()
 
 if "bot" not in st.session_state:
@@ -15,10 +16,16 @@ if "messages" not in st.session_state:
 
 st.title('Youtube Chatbot')
 
-video_id = st.text_input('Enter youtube video id') 
+video_url = st.text_input("Enter YouTube URL",key="video_url")
 
 if st.button("Process Video"):
     st.session_state.messages = []
+    video_id = extract_video_id(video_url)
+
+    if not video_id:
+        st.error("Invalid YouTube URL")
+    else:
+        chunks = get_video_chunks(video_id)
 
     chunks = get_video_chunks(video_id)
 
