@@ -27,7 +27,10 @@ if st.button("Process Video"):
     else:
         chunks = get_video_chunks(video_id)
 
-    # chunks = get_video_chunks(video_id)
+    chunks = get_video_chunks(video_id)
+    if not chunks:
+        st.error("No transcript chunks found for this video.")
+        st.stop()
 
     vector_store = create_vectorstore(chunks)
 
