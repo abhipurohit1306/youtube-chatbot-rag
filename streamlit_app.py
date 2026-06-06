@@ -27,7 +27,7 @@ if st.button("Process Video"):
     else:
         chunks = get_video_chunks(video_id)
 
-    chunks = get_video_chunks(video_id)
+    # chunks = get_video_chunks(video_id)
 
     vector_store = create_vectorstore(chunks)
 

@@ -5,6 +5,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage
 from langchain_core.messages import AIMessage
 from app.prompts import get_youtube_prompt
+from app.utils import format_timestamp
+from app.utils import is_small_talk
 
 class YouTubeChatbot:
 
@@ -34,15 +36,39 @@ class YouTubeChatbot:
         )
     
     def ask(self, question):
+
+        if is_small_talk(question):
+            answer = self.llm.invoke(question).content
+            self.chat_history.append(HumanMessage(content=question))
+            self.chat_history.append(AIMessage(content=answer))
+            return answer
+
+        retrieved_docs = self.retriever.invoke(
+            question
+        )
+
         answer = self.main_chain.invoke(
             question
         )
+
+        citations = self.get_citations(
+            retrieved_docs
+        )
+
+        answer = (
+            answer
+            + "\n\nSources:\n"
+            + "\n".join(citations)
+        )
+
         self.chat_history.append(
             HumanMessage(content=question)
         )
+
         self.chat_history.append(
             AIMessage(content=answer)
         )
+
         return answer
 
 
@@ -57,4 +83,12 @@ class YouTubeChatbot:
             print("\nAI:")
             print(answer)
 
-        
+    def get_citations(self, retrieved_docs):
+        citations = []
+        for doc in retrieved_docs:
+            start = format_timestamp(doc.metadata["start"])
+            end = format_timestamp(doc.metadata["end"])
+            citations.append(f"[{start} - {end}]")
+
+        return citations
+            
