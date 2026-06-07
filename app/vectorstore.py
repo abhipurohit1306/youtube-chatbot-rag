@@ -25,12 +25,13 @@ def load_vectorstore(path):
     return FAISS.load_local(path,embeddings,allow_dangerous_deserialization=True)
 
 
-def get_or_create_vectorstore(video_id,chunks):
+def get_or_create_vectorstore(video_id,get_chunks_func):
     path = f"faiss_indexes/{video_id}"
     if os.path.exists(path):
         print("Loading existing FAISS index...")
         return load_vectorstore(path)
     print("Creating new FAISS index...")
+    chunks = get_chunks_func()
     vector_store = create_vectorstore(chunks)
     save_vectorstore(
         vector_store,

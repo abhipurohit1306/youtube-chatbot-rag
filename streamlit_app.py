@@ -32,7 +32,7 @@ if st.button("Process Video"):
         st.error("No transcript chunks found for this video.")
         st.stop()
 
-    vector_store = get_or_create_vectorstore(video_id,chunks)
+    vector_store = get_or_create_vectorstore(video_id,lambda: get_video_chunks(video_id))
 
     retriever = create_retriever(vector_store)
 
