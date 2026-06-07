@@ -1,6 +1,6 @@
 import streamlit as st
 from app.ingestion import get_video_chunks
-from app.vectorstore import create_vectorstore
+from app.vectorstore import get_or_create_vectorstore
 from app.retriever import create_retriever
 from app.chatbot import YouTubeChatbot
 from dotenv import load_dotenv
@@ -32,7 +32,7 @@ if st.button("Process Video"):
         st.error("No transcript chunks found for this video.")
         st.stop()
 
-    vector_store = create_vectorstore(chunks)
+    vector_store = get_or_create_vectorstore(video_id,chunks)
 
     retriever = create_retriever(vector_store)
 
