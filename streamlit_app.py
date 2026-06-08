@@ -12,11 +12,23 @@ video_url = st.text_input("Enter YouTube URL",key="video_url")
 
 if st.button("Process Video"):
     st.session_state.messages = []
+
     response = requests.post(
         f"{API_URL}/process-video",
-        json={"video_url": video_url}
+        json={
+            "video_url": video_url
+        }
     )
+
+    if response.status_code != 200:
+        st.error(
+            f"Backend Error ({response.status_code})"
+        )
+        st.write(response.text)
+        st.stop()
+
     data = response.json()
+
     if data["status"] == "success":
         st.success("Video Ready")
     else:
@@ -34,27 +46,42 @@ if question:
             "content": question
         }
     )
+
     with st.chat_message("user"):
         st.write(question)
-        response = requests.post(
-            f"{API_URL}/chat",
-            json={
-                "question": question
+
+    response = requests.post(
+        f"{API_URL}/chat",
+        json={
+            "question": question
+        }
+    )
+
+    if response.status_code != 200:
+        st.error(
+            f"Backend Error ({response.status_code})"
+        )
+        st.write(response.text)
+        st.stop()
+
+    data = response.json()
+
+    if "answer" in data:
+
+        answer = data["answer"]
+
+        with st.chat_message("assistant"):
+            st.write(answer)
+
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": answer
             }
         )
-        data = response.json()
-        if "answer" in data:
-            answer = data["answer"]
-            with st.chat_message("assistant"):
-                st.write(answer)
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": answer
-                }
-            )
-        else:
-            st.warning(data["message"])
+
+    else:
+        st.warning(data["message"])
 
 st.sidebar.title("YouTube Chatbot")
 st.sidebar.markdown("---")

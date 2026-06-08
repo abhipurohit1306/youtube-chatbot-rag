@@ -18,6 +18,6 @@ retriever = create_retriever(vector_store)
 prompt = get_youtube_prompt()
 
 
-bot = YouTubeChatbot(retriever)
+bot = YouTubeChatbot(retriever, vector_store)
 
 bot.chat()

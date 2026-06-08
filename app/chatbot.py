@@ -10,10 +10,11 @@ from app.utils import is_small_talk
 
 class YouTubeChatbot:
 
-    def __init__(self, retriever):
+    def __init__(self, retriever, vector_store):
         self.retriever = retriever
+        self.vector_store = vector_store
         self.llm = ChatGoogleGenerativeAI(
-            model="models/gemini-2.5-flash-lite",
+            model="models/gemini-3.5-flash",
             temperature=0.2
         )
         self.prompt = get_youtube_prompt()
@@ -43,9 +44,15 @@ class YouTubeChatbot:
             self.chat_history.append(AIMessage(content=answer))
             return answer
 
-        retrieved_docs = self.retriever.invoke(
-            question
+        results = self.vector_store.similarity_search_with_score(
+            question,
+            k=4
         )
+
+        retrieved_docs = [
+            doc
+            for doc, score in results
+        ]
 
         answer = self.main_chain.invoke(
             question
@@ -80,7 +87,8 @@ class YouTubeChatbot:
         self.chat_history.append(
             AIMessage(content=answer)
         )
-
+        for doc, score in results:
+            print(score)
         return answer
 
 

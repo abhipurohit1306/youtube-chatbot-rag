@@ -45,7 +45,7 @@ def process_video(request: VideoRequest):
         vector_store
     )
 
-    chatbot = YouTubeChatbot(retriever)
+    chatbot = YouTubeChatbot(retriever, vector_store)
 
     return {
         "status": "success"
