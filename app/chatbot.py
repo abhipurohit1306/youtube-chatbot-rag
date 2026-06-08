@@ -54,7 +54,19 @@ class YouTubeChatbot:
         citations = self.get_citations(
             retrieved_docs
         )
-
+        negative_phrases = [
+            "not discussed",
+            "not mentioned",
+            "does not discuss",
+            "doesn't discuss",
+            "no information",
+            "not covered",
+            "don't know"
+        ]
+        if any(
+            phrase in answer.lower()
+            for phrase in negative_phrases):
+                return answer
         answer = (
             answer
             + "\n\nSources:\n"
