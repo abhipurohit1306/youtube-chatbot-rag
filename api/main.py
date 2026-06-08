@@ -12,6 +12,9 @@ load_dotenv()
 class VideoRequest(BaseModel):
     video_url: str
 
+class ChatRequest(BaseModel):
+    question: str
+
 app = FastAPI()
 chatbot = None
 
@@ -28,28 +31,44 @@ def home():
 def process_video(request: VideoRequest):
 
     global chatbot
-    video_id = extract_video_id(
-        request.video_url
-    )
+    video_id = extract_video_id(request.video_url)
     if not video_id:
         return {
             "status": "error",
             "message": "Invalid YouTube URL"
         }
-
     vector_store = get_or_create_vectorstore(
         video_id,
         lambda: get_video_chunks(video_id)
     )
-
     retriever = create_retriever(
         vector_store
     )
 
-    chatbot = YouTubeChatbot(
-        retriever
-    )
+    chatbot = YouTubeChatbot(retriever)
 
     return {
         "status": "success"
+    }
+
+
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+
+    global chatbot
+
+    if chatbot is None:
+
+        return {
+            "status": "error",
+            "message": "Process a video first"
+        }
+
+    answer = chatbot.ask(
+        request.question
+    )
+
+    return {
+        "answer": answer
     }
