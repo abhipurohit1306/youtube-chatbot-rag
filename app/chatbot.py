@@ -49,6 +49,24 @@ class YouTubeChatbot:
             k=4
         )
 
+        best_score = results[0][1]
+        print(f"Best Score: {best_score}")
+        if best_score > 1.5:
+            answer = (
+                "I could not find sufficiently relevant information "
+                "in the video to answer that question."
+            )
+
+            self.chat_history.append(
+                HumanMessage(content=question)
+            )
+
+            self.chat_history.append(
+                AIMessage(content=answer)
+            )
+
+            return answer
+
         retrieved_docs = [
             doc
             for doc, score in results
@@ -87,8 +105,8 @@ class YouTubeChatbot:
         self.chat_history.append(
             AIMessage(content=answer)
         )
-        for doc, score in results:
-            print(score)
+        # for doc, score in results:
+        #     print(score)
         return answer
 
 
