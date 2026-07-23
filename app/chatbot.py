@@ -14,7 +14,7 @@ class YouTubeChatbot:
         self.retriever = retriever
         self.vector_store = vector_store
         self.llm = ChatGoogleGenerativeAI(
-            model="models/gemini-3.5-flash",
+            model="models/gemini-2.5-flash",
             temperature=0.2
         )
         self.prompt = get_youtube_prompt()

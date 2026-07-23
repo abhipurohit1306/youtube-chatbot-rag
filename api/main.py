@@ -72,3 +72,4 @@ def chat(request: ChatRequest):
     return {
         "answer": answer
     }
+
